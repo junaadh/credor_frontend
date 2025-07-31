@@ -39,11 +39,7 @@ export default function HomeScreen() {
     router.push("/(app)/home/facialScan");
   };
 
-  const { session, refreshContext } = useSession();
-
-  useEffect(() => {
-    refreshContext();
-  }, [session]);
+  const { session } = useSession();
 
   return (
     <View style={styles.container}>

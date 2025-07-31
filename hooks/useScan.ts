@@ -43,7 +43,11 @@ export const useScan = (): useScanProps => {
         method: "GET",
         headers: { Authorization: `Bearer ${session?.jwt}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch scan history");
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch scan history");
+      }
+
       const rawData = await res.json();
       const simplifiedData: ScanJob[] = rawData.map((item: any) => ({
         job_id: item.job_id,
@@ -57,7 +61,7 @@ export const useScan = (): useScanProps => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setAllItems]);
 
   const detailedInfo = useCallback(async (job_id: string): Promise<void> => {
     setIsLoading(true);
