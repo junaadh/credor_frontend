@@ -24,8 +24,9 @@ function RootNavigator() {
   const { session } = useSession();
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={session === null}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       <Stack.Protected guard={session !== null}>

@@ -56,10 +56,9 @@ export default function HomeScreen() {
             />
             <Text style={styles.greeting}>{`Hi ${session?.name}!`}</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications" size={24} color="#FFFFFF" />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notificationButton}
+          ></TouchableOpacity>
         </View>
 
         {/* Quick Scan Section */}

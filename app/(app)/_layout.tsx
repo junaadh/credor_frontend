@@ -21,6 +21,7 @@ export default function TabNavigator() {
   // return <Stack screenOptions={{ headerShown: false }} />;
   return (
     <Tabs
+      initialRouteName="home"
       screenOptions={{
         tabBarActiveTintColor: "#EFBD3D",
       }}

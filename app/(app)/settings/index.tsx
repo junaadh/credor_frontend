@@ -23,7 +23,7 @@ export default function SettingsScreen() {
       title: "Personal Information",
       icon: "person-outline",
       onPress: () => {
-        router.push("/(app)/settings/updateSetting");
+        router.push("/(app)/settings/personalInformation");
       },
     },
     {
@@ -39,7 +39,7 @@ export default function SettingsScreen() {
       title: "History",
       icon: "time-outline",
       onPress: () => {
-        Alert.alert("Coming Soon", "History will be available soon.");
+        router.push("/(app)/settings/history");
       },
     },
     {

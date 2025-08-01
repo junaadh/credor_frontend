@@ -4,6 +4,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useMemo,
 } from "react";
 import { useStorageState } from "./useStorage";
 import { CredorResponse } from "@/constants/response";
@@ -25,6 +26,7 @@ type AuthContextType = {
     password: string,
   ) => Promise<CredorResponse>;
   logout: () => void;
+  delete: () => Promise<void>;
   refreshContext: () => Promise<void>;
   session: SessionContextType | null;
   isLoading: boolean;
@@ -42,16 +44,16 @@ export function useSession() {
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, rawSession], setRawSession] = useStorageState("session");
 
-  const session: SessionContextType | null =
-    rawSession &&
-    (() => {
-      try {
-        const parse = JSON.parse(rawSession);
-        return parse.jwt && parse.name ? parse : null;
-      } catch {
-        return null;
-      }
-    })();
+  const session: SessionContextType | null = useMemo(() => {
+    if (!rawSession) return null;
+
+    try {
+      const parsed = JSON.parse(rawSession);
+      return parsed.jwt && parsed.name ? parsed : null;
+    } catch {
+      return null;
+    }
+  }, [rawSession]);
 
   const login = useCallback(
     async (email: string, password: string): Promise<CredorResponse> => {
@@ -166,6 +168,28 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   }, [session, setRawSession]);
 
+  const delete_ = useCallback(async (): Promise<void> => {
+    if (!session) {
+      console.log("No session available");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/user/delete`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.jwt}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("failed to delete user");
+
+      return;
+    } catch (err) {
+      console.log("Deletion failure", err);
+    }
+  }, [session]);
+
   useEffect(() => {
     refreshContext();
   }, []);
@@ -179,6 +203,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         refreshContext,
         session: session,
         isLoading: isLoading,
+        delete: delete_,
       }}
     >
       {children}

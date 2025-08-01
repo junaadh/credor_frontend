@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Dimensions,
+  Alert,
+  SafeAreaView,
   TouchableOpacity,
+  View,
   Text,
-  RefreshControl,
+  TextInput,
   Modal,
   FlatList,
-  Linking,
   Image,
+  Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import HistoryItem from "@/components/HistoryCard";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useSettings } from "@/hooks/useSettings";
+import { useSession } from "@/hooks/context";
 import { ScanJob } from "@/constants/Scan";
 import { useScan } from "@/hooks/useScan";
-import { useSession } from "@/hooks/context";
+import HistoryItem from "@/components/HistoryCard";
+
 const { width } = Dimensions.get("window");
 
 async function openBlueskyPost(uri: string) {
@@ -48,19 +53,23 @@ const openExternalURL = async (url: string) => {
   }
 };
 
-export default function ScanScreen() {
+export default function ChangeHistoryScreen() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selected, setSelected] = useState<ScanJob | null>(null);
+
   const {
     completedItems,
     pendingItems,
     runningItems,
     refresh,
-    startScan,
     detailedInfo,
     results,
     isLoading,
   } = useScan();
+
+  const handleBackPress = () => {
+    router.back();
+  };
 
   useEffect(() => {
     refresh();
@@ -72,10 +81,6 @@ export default function ScanScreen() {
     }
   }, [selected, setSelected]);
 
-  const onScan = () => {
-    startScan("deepfake");
-  };
-
   const { session } = useSession();
 
   return (
@@ -85,68 +90,59 @@ export default function ScanScreen() {
       end={{ x: -0.76, y: -0.54 }}
       style={styles.container}
     >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refresh} />
-        }
-      >
-        <View style={styles.scanSection}>
-          <View style={styles.scanCircle2}>
-            <View style={styles.scanCircle1}>
-              <TouchableOpacity style={styles.scanButton} onPress={onScan}>
-                <Ionicons name="scan" size={60} color="#FFFFFF" />
-              </TouchableOpacity>
+      <ScrollView style={styles.scrollView}>
+        <SafeAreaView>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={handleBackPress}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>History</Text>
             </View>
           </View>
-          <Text style={styles.scanText}>SCAN</Text>
-        </View>
 
-        {/*        <ActionButtons
-          primaryButton
-          primaryText="Update Scan"
-          onPrimaryPress={() => navigation.navigate("FacialScan")}
-        />
-*/}
-        <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>In Progress</Text>
-          {pendingItems.map((item) => (
-            <HistoryItem
-              key={item.job_id}
-              item={item}
-              onPress={() => {
-                setSelected(item);
-                setShowModal(true);
-              }}
-            />
-          ))}
-          {runningItems.map((item) => (
-            <HistoryItem
-              key={item.job_id}
-              item={item}
-              onPress={() => {
-                setSelected(item);
-                setShowModal(true);
-              }}
-            />
-          ))}
+          <View style={styles.historySection}>
+            <Text style={styles.sectionTitle}>In Progress</Text>
+            {pendingItems.map((item) => (
+              <HistoryItem
+                key={item.job_id}
+                item={item}
+                onPress={() => {
+                  setSelected(item);
+                  setShowModal(true);
+                }}
+              />
+            ))}
+            {runningItems.map((item) => (
+              <HistoryItem
+                key={item.job_id}
+                item={item}
+                onPress={() => {
+                  setSelected(item);
+                  setShowModal(true);
+                }}
+              />
+            ))}
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <Text style={styles.sectionTitle}>History</Text>
-          {completedItems.map((item) => (
-            <HistoryItem
-              key={item.job_id}
-              item={item}
-              onPress={() => {
-                setSelected(item);
-                setShowModal(true);
-              }}
-            />
-          ))}
-        </View>
+            <Text style={styles.sectionTitle}>History</Text>
+            {completedItems.map((item) => (
+              <HistoryItem
+                key={item.job_id}
+                item={item}
+                onPress={() => {
+                  setSelected(item);
+                  setShowModal(true);
+                }}
+              />
+            ))}
+          </View>
+        </SafeAreaView>
       </ScrollView>
       <Modal
         visible={showModal && selected !== null}
@@ -215,10 +211,7 @@ export default function ScanScreen() {
                   padding: 12,
                   flex: 1,
                 }}
-                onPress={() => {
-                  console.log(item.post_url);
-                  openExternalURL(item.post_url);
-                }}
+                onPress={() => openExternalURL(item.post_url)}
               >
                 <Image
                   source={{ uri: item.media_url }}
@@ -238,7 +231,7 @@ export default function ScanScreen() {
                 <Text style={{ color: "#ccc", marginTop: 4 }}>
                   Confidence:
                   {item.confidence === -1.0
-                    ? "N/A"
+                    ? "100%"
                     : `${(item.confidence).toFixed(2)}%`}
                 </Text>
                 <Text style={{ color: "#888", fontSize: 12, marginTop: 2 }}>
@@ -259,92 +252,90 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
     paddingHorizontal: Math.min(38, width * 0.1),
-    // paddingBottom: 100,
   },
   scrollView: {
     flex: 1,
-    height: "120%",
   },
-  searchContainer: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 38,
-    marginTop: 78,
-    borderWidth: 1,
-    borderColor: "#FFFFFF",
-    borderRadius: 10,
-    paddingHorizontal: 19,
-    height: 35,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
-  searchInput: {
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  titleContainer: {
     flex: 1,
-    color: "#FFFFFF",
-    fontFamily: "DMSans-Regular",
-    fontSize: 16,
-    marginRight: 10,
+    marginLeft: 10,
   },
-  scanSection: {
-    alignItems: "center",
-    marginTop: 52,
-  },
-  scanCircle2: {
-    width: 217,
-    height: 217,
-    borderRadius: 108.5,
-    backgroundColor: "rgba(239, 189, 61, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanCircle1: {
-    width: 197,
-    height: 197,
-    borderRadius: 98.5,
-    backgroundColor: "rgba(239, 189, 61, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanButton: {
-    width: 152,
-    height: 152,
-    borderRadius: 76,
-    backgroundColor: "#EFBD3D",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanText: {
+  title: {
     fontFamily: "DMSans-Bold",
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#F5F5F5",
+    lineHeight: 42,
+  },
+  description: {
+    fontFamily: "DMSans-Regular",
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#F5F5F5",
+    lineHeight: 18,
+    marginBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 40,
+  },
+  inputLabel: {
+    fontFamily: "DMSans-Bold",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F5F5F5",
+    lineHeight: 21,
+    marginBottom: 10,
+  },
+  textInput: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 15,
     fontSize: 16,
     color: "#F5F5F5",
-    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
-  filterBar: {
-    flexDirection: "row",
-    marginTop: 40,
-    height: 54,
-    backgroundColor: "#202020",
+  buttonContainer: {
     alignItems: "center",
-    paddingHorizontal: 32,
+    marginTop: 40,
+    marginBottom: 40,
   },
-  filterButton: {
-    marginRight: 23,
-    height: 37,
-    justifyContent: "center",
-    paddingHorizontal: 10,
-  },
-  filterButtonActive: {
-    backgroundColor: "#EFBD3D",
+  saveButton: {
+    width: 212,
+    height: 38,
     borderRadius: 10,
+    backgroundColor: "#EFBD3D",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#EFBD3D",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 21.4,
+    elevation: 5,
   },
-  filterText: {
-    fontFamily: "DMSans-Regular",
-    fontSize: 16,
-    color: "#9D9D9D",
-  },
-  filterTextActive: {
-    color: "#000000",
+  saveButtonText: {
     fontFamily: "DMSans-Bold",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F1F1F",
+    lineHeight: 21,
   },
   historySection: {
     marginTop: 30,

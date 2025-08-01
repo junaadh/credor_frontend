@@ -4,10 +4,12 @@ import { useSession } from "./context";
 export interface SettingsProps {
   name: string;
   email: string;
+  age: number;
   updateSettings: (
     new_name: string | null,
     new_email: string | null,
     new_password: string | null,
+    new_age: number | null,
   ) => Promise<void>;
   checkValid: (new_email: string) => Promise<boolean>;
   isLoading: boolean;
@@ -52,6 +54,7 @@ export const useSettings = (): SettingsProps => {
       new_name: string | null,
       new_email: string | null,
       new_password: string | null,
+      new_age: number | null,
     ): Promise<void> => {
       setIsLoading(true);
 
@@ -66,6 +69,7 @@ export const useSettings = (): SettingsProps => {
             name: new_name,
             email: new_email,
             password: new_password,
+            age: new_age,
           }),
         });
 
@@ -75,14 +79,12 @@ export const useSettings = (): SettingsProps => {
           throw new Error(error.error || "Failed to update settings");
         }
 
-        if (new_email) {
+        if (new_email || new_password) {
           logout();
           return;
         }
 
-        if (new_name) {
-          refreshContext();
-        }
+        refreshContext();
       } catch (err) {
         console.error("failed to update settings", err);
       } finally {
@@ -94,6 +96,7 @@ export const useSettings = (): SettingsProps => {
 
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [age, setAge] = useState<number>(0);
 
   useEffect(() => {
     const getProfile = async (): Promise<void> => {
@@ -113,6 +116,7 @@ export const useSettings = (): SettingsProps => {
         const rawData = await res.json();
         setEmail(rawData.email);
         setName(rawData.name);
+        setAge(rawData.age);
       } catch (err) {
         console.error("email validity check failed: ", err);
       } finally {
@@ -129,5 +133,6 @@ export const useSettings = (): SettingsProps => {
     isLoading,
     name,
     email,
+    age,
   };
 };

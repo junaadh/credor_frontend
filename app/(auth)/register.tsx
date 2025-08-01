@@ -44,8 +44,18 @@ export default function RegisterScreen() {
     return currentYear - parseInt(year, 10);
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleNextPress = async () => {
     if (email && password && gender && day && month && year && name) {
+      if (!validateEmail(email)) {
+        alert("Email Address is invalid");
+        return;
+      }
+
       const age = handleYearSelect(year);
       let response: CredorResponse | null = null;
       try {
